@@ -24,18 +24,25 @@ docker-compose up --build
    uv sync
    ```
 
-2. **Запустите PostgreSQL** (или используйте docker-compose для запуска только БД):
+2. **Настройте локальное окружение:**
+   Скопируйте пример файла конфигурации `.env.example` в `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+   Откройте `.env` и заполните данные для подключения: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` и другие (например, для локальной БД в Docker укажите `POSTGRES_HOST=localhost` и `POSTGRES_PORT=5433`). А также убедитесь, что корректно формируется переменная `DATABASE_URL` (либо задайте её вручную по образцу `postgresql+asyncpg://user:pass@localhost:5433/db_name`).
+
+3. **Запустите PostgreSQL** (например, через подготовленный docker-compose файл):
    ```bash
    docker-compose up -d db
    ```
 
-3. **Настройте переменные окружения** (DATABASE_URL):
+4. **Создайте первичную структуру БД (инициализация таблиц):**
+   До запуска бэкенда необходимо применить миграции через Alembic, чтобы в базе данных появились нужные таблицы:
    ```bash
-   # Windows (PowerShell)
-   $env:DATABASE_URL = "postgresql+asyncpg://user:pass@localhost:5433/network"
+   uv run alembic upgrade head
    ```
 
-4. **Запустите сервис:**
+5. **Запустите сервис:**
    ```bash
    uv run uvicorn main:app --reload
    ```
