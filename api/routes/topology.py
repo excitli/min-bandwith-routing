@@ -4,7 +4,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dependency import get_db
 from models.scenario import Scenarios
 from models.edges import Edges
-from models.node import Nodes
 from schemas.topology import TopologyCreate
 
 
