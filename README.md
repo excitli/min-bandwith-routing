@@ -29,7 +29,7 @@ docker-compose up --build
    ```bash
    cp .env.example .env
    ```
-   Откройте `.env` и заполните данные для подключения: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` и другие (например, для локальной БД в Docker укажите `POSTGRES_HOST=localhost` и `POSTGRES_PORT=5433`). А также убедитесь, что корректно формируется переменная `DATABASE_URL` (либо задайте её вручную по образцу `postgresql+asyncpg://user:pass@localhost:5433/db_name`).
+   Откройте `.env` и заполните данные для подключения: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` и другие (например, для локальной БД в Docker укажите `POSTGRES_HOST=localhost` и `POSTGRES_PORT=5433`).
 
 3. **Запустите PostgreSQL** (например, через подготовленный docker-compose файл):
    ```bash
@@ -44,19 +44,46 @@ docker-compose up --build
 
 5. **Запустите сервис:**
    ```bash
-   uv run uvicorn main:app --reload
+   uv run uvicorn app.main:app --reload
    ```
 
 ## Структура проекта
 
-- `api/routes/` — эндпоинты API (topology, demands, optimization).
-- `models/` — SQLAlchemy модели базы данных.
-- `schemas/` — Pydantic схемы (DTO).
-- `db/` — инициализация и сессии базы данных.
-- `main.py` — точка входа FastAPI.
+```
+├── app/                    # Основной пакет приложения
+│   ├── main.py             # Точка входа FastAPI
+│   ├── core/               # Конфигурация и общие зависимости
+│   │   ├── config.py       # Настройки (Pydantic Settings)
+│   │   └── dependencies.py # FastAPI-зависимости (сессия БД и др.)
+│   ├── api/                # Слой API
+│   │   └── routes/         # Эндпоинты
+│   │       ├── router.py   # Главный роутер
+│   │       ├── topology.py # Управление топологией
+│   │       ├── demands.py  # Управление демандами
+│   │       └── optimization.py
+│   ├── models/             # SQLAlchemy-модели
+│   │   ├── base.py         # Базовый класс DeclarativeBase
+│   │   ├── scenario.py
+│   │   ├── node.py
+│   │   ├── edge.py
+│   │   └── demand.py
+│   ├── schemas/            # Pydantic-схемы (DTO)
+│   │   ├── topology.py
+│   │   └── demands.py
+│   └── db/                 # Инициализация и сессии БД
+│       └── session.py
+├── migrations/             # Alembic-миграции
+│   ├── env.py
+│   └── versions/
+├── alembic.ini
+├── pyproject.toml
+├── Dockerfile
+├── docker-compose.yml
+└── .env.example
+```
 
 ## Основные эндпоинты
 
-- `GET /topology/` — управление топологией сети.
-- `GET /demands/` — управление требованиями (демандами).
+- `POST /topology/` — создание топологии сети (сценарий + рёбра).
+- `POST /demands/` — добавление требований (демандов) к сценарию.
 - `POST /optimization/` — запуск процесса оптимизации.
