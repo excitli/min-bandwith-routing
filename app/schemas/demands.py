@@ -1,11 +1,12 @@
 from pydantic import BaseModel
-from typing import List
 
-class DemandsDTO(BaseModel):
+
+class DemandDTO(BaseModel):
     source: int
     target: int
     traffic: float
 
+
 class DemandCreate(BaseModel):
     scenario_id: int
-    demands: List[DemandsDTO]
+    demands: list[DemandDTO]
