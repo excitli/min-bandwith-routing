@@ -12,3 +12,4 @@ class Edge(Base):
     source: Mapped[int] = mapped_column(Integer)
     target: Mapped[int] = mapped_column(Integer)
     capacity: Mapped[float] = mapped_column(Float)
+    weight: Mapped[float] = mapped_column(Float, default=1.0)
