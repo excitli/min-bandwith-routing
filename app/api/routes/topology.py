@@ -7,18 +7,18 @@ from app.models.edge import Edge
 from app.models.scenario import Scenario
 from app.schemas import topology
 from app.schemas.topology import TopologyCreate, EdgeResponseDTO, TopologyResponse
-import networkx as nx
-
+from app.additional.build_graph import build_graph
 router = APIRouter()
 
 
-async def get_graph_by_scenario(scenario_id: int, session: AsyncSession):
-    scenario_query = await session.execute(select(Scenario).where(Scenario.id == scenario_id))
+async def get_graph_by_scenario(scenario_id: int, db: AsyncSession):
+    scenario_query = await db.execute(select(Scenario).where(Scenario.id == scenario_id))
     scenario = scenario_query.scalar_one_or_none()
 
     if not scenario:
         raise HTTPException(status_code=404, detail="Scenario not found")
-    edges_query = await session.execute(select(Edge).where(Edge.scenario_id == scenario.id))
+
+    edges_query = await db.execute(select(Edge).where(Edge.scenario_id == scenario.id))
 
     edges = edges_query.scalars().all()
 
@@ -26,19 +26,19 @@ async def get_graph_by_scenario(scenario_id: int, session: AsyncSession):
         raise HTTPException(status_code=404, detail="Edge not found")
     ''' 
     TODO: add demands so that we can insert it into the digraph,
-    will have to verify that (demand.source == edge.source) and so on
+    will have to verify that (demand.source == edge.source) and so onss
     '''
-    graph = nx.DiGraph()
-
-    for edge in edges:
-        graph.add_edge(
-            edge.source,
-            edge.target,
-            id=edge.id,
-            capacity=edge.capacity,
-            weight=edge.weight,
-        )
-
+    # graph = nx.DiGraph()
+    #
+    # for edge in edges:
+    #     graph.add_edge(
+    #         edge.source,
+    #         edge.target,
+    #         id=edge.id,
+    #         capacity=edge.capacity,
+    #         weight=edge.weight,
+    #     )
+    graph = build_graph(edges)
     return {
         "scenario_id": scenario.id,
         "graph": graph,
