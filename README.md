@@ -11,8 +11,8 @@ docker-compose up --build
 ```
 
 После запуска:
-- **API доступно по адресу:** [http://localhost:8000](http://localhost:8000)
-- **Документация (Swagger):** [http://localhost:8000/docs](http://localhost:8000/docs)
+- **API доступно по адресу:** [http://localhost:8080](http://localhost:8000)
+- **Документация (Swagger):** [http://localhost:8080/docs](http://localhost:8000/docs)
 - **База данных PostgreSQL:** `localhost:5433`
 
 ## Локальная разработка
