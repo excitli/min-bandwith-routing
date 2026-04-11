@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Dict, Any
 import networkx as nx
 
@@ -7,10 +7,10 @@ class TopologyCreate(BaseModel):
     edges: list[EdgeDTO]
 
 class EdgeDTO(BaseModel):
-    source: int
-    target: int
-    capacity: float
-    weight: float = 1.0
+    source: int = Field(ge=0)
+    target: int = Field(ge=0)
+    capacity: float = Field(ge=1)
+    weight: float = Field(ge=1, default=1)
 
 
 class EdgeResponseDTO(EdgeDTO):
