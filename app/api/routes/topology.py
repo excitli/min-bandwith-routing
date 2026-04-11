@@ -42,7 +42,7 @@ async def get_graph_by_scenario(scenario_id: int, db: AsyncSession):
     return {
         "scenario_id": scenario.id,
         "graph": graph,
-        "edges_raw": edges,
+        "edges": edges,
     }
 
 
