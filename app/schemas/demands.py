@@ -1,10 +1,10 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class DemandDTO(BaseModel):
-    source: int
-    target: int
-    traffic: float
+    source: int = Field(ge=0)
+    target: int = Field(ge=0)
+    traffic: float = Field(ge=0)
 
 
 class DemandCreate(BaseModel):

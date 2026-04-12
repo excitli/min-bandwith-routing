@@ -5,8 +5,20 @@ from app.core.dependencies import get_db
 from app.models.demand import Demand
 from app.models.scenario import Scenario
 from app.schemas.demands import DemandCreate
+from sqlalchemy import select
+from app.additional.build_graph import build_graph
 
 router = APIRouter()
+
+
+
+async def get_demands_by_scenario(scenario_id: int, db: AsyncSession = Depends(get_db)):
+    demands_query = await db.execute(select(Demand).where(Demand.scenario_id == scenario_id))
+    demands = demands_query.scalars().all()
+    if not demands:
+        raise HTTPException(status_code=404, detail="Demand not found")
+    return demands
+
 
 
 @router.post("/")
