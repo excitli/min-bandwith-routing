@@ -170,6 +170,7 @@ export default function ControlPanel({
             </label>
             <input
               type="number"
+              className="number-input"
               min="1"
               step="1"
               placeholder="Ex: 15"
@@ -192,6 +193,7 @@ export default function ControlPanel({
             </label>
             <input
               type="number"
+              className="number-input"
               min="1"
               step="1"
               placeholder="Ex: 8"
@@ -250,6 +252,7 @@ export default function ControlPanel({
             </label>
             <input
               type="number"
+              className="number-input"
               min="1"
               step="1"
               placeholder="Ex: 1"
@@ -272,6 +275,7 @@ export default function ControlPanel({
             </label>
             <input
               type="number"
+              className="number-input"
               min="1"
               step="1"
               placeholder="Ex: 4"
@@ -294,6 +298,7 @@ export default function ControlPanel({
             </label>
             <input
               type="number"
+              className="number-input"
               min="1"
               step="1"
               placeholder="Ex: 10"

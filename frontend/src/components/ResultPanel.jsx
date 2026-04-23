@@ -42,15 +42,7 @@ export default function ResultsPanel({
               ))}
             </ul>
 
-            <h3>Загрузка каналов</h3>
-            <ul style={{ paddingLeft: "18px" }}>
-              {result.edgeLoads.map((edge) => (
-                <li key={edge.edgeId}>
-                  {edge.edgeId}: {edge.load}/{edge.capacity} |{" "}
-                  {Math.round(edge.utilization * 100)}% | π = {edge.pi}
-                </li>
-              ))}
-            </ul>
+            {/* загрузка каналов */}
           </>
         )}
       </div>
