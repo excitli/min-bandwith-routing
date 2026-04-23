@@ -155,3 +155,25 @@ cython_debug/
 # OS specific
 .DS_Store
 Thumbs.db
+
+# Frontend / Node.js
+node_modules/
+frontend/node_modules/
+
+# Vite
+.vite/
+frontend/.vite/
+
+# Frontend build output
+frontend/dist/
+
+# npm / yarn logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Optional envs for frontend
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
