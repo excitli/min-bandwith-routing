@@ -1,17 +1,65 @@
 
-
 services:
   db:
-    image: postgres:15
+    image: postgres:16-alpine
     container_name: network_db
     restart: always
     env_file:
-      - .env
+      - backend/.env
     ports:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fa_backend
+    restart: always
+    env_file:
+      - backend/.env
+    ports:
+      - "8000:8000"
+    networks:
+      - app_network
+    volumes:
+      - ./backend:/app/backend
+    depends_on:
+      db:
+        condition: service_healthy
+    working_dir: /app
+
+    command: >
+      sh -c "sleep 3 && 
+             uv run alembic upgrade head && 
+             uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*' --reload"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: react_frontend
+    restart: always
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "3000:80"
+    networks:
+      - app_network
 
 
 volumes:
   postgres_data:
+
+networks:
+  app_network:
+    driver: bridge
