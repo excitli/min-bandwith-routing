@@ -3,5 +3,15 @@ import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react()], // added server proxy so that it can find backend in docker network
+  server: {
+    host: '0.0.0.0',
+    port: 5173,
+    proxy: {
+        '/api': {
+            target: 'http://backend:8000',
+            changeOrigin: true
+        }
+    }
+  }
 })
