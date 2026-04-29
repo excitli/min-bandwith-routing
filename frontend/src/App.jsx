@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import ControlPanel from "./components/ControlPanel";
 import NetworkGraph from "./components/NetworkGraph";
 import ResultsPanel from "./components/ResultsPanel";
-import { mockNetwork } from "./data/mockData";
-import { createTopology, createDemands, createOptimization } from "./api/networkApi";
+import { mockNetwork } from "./data/MockData";
+import { createTopology, createDemands, createOptimization } from "./api/NetworkApi";
 
 function App() {
   const [mode, setMode] = useState("BIFURCATED");
