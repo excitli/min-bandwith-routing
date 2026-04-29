@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
-from app.api.routes import demands, optimization, topology
+from backend.app.api.routes import optimization
+from backend.app.api.routes import demands, topology
 
 api_router = APIRouter()
 

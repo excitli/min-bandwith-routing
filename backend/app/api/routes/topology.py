@@ -1,13 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, join
-from app.core.dependencies import get_db
-from app.models import edge
-from app.models.edge import Edge
-from app.models.scenario import Scenario
-from app.schemas import topology
-from app.schemas.topology import TopologyCreate, EdgeResponseDTO, TopologyResponse
-from app.additional.build_graph import build_graph
+from sqlalchemy import select
+from backend.app.core.dependencies import get_db
+from backend.app.models.edge import Edge
+from backend.app.models.scenario import Scenario
+from backend.app.schemas.topology import TopologyCreate, TopologyResponse
+from backend.app.additional.build_graph import build_graph
 router = APIRouter()
 
 

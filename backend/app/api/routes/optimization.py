@@ -1,16 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.dependencies import get_db
-from app.optimization.solver import solve_routing
-from app.schemas.optimize import OptimizeRequest
-from app.optimization.shortest_paths import generate_k_shortest_paths
-from app.api.routes.topology import get_graph_by_scenario
-from app.api.routes.demands import get_demands_by_scenario
-from app.additional.build_graph import build_graph
-import networkx as nx
-
-
-
+from backend.app.core.dependencies import get_db
+from backend.app.optimization.solver import solve_routing
+from backend.app.schemas.optimize import OptimizeRequest
+from backend.app.optimization.shortest_paths import generate_k_shortest_paths
+from backend.app.api.routes.topology import get_graph_by_scenario
+from backend.app.api.routes.demands import get_demands_by_scenario
 
 router = APIRouter()
 

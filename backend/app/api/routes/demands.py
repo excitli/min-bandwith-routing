@@ -1,12 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.dependencies import get_db
-from app.models.demand import Demand
-from app.models.scenario import Scenario
-from app.schemas.demands import DemandCreate
+from backend.app.core.dependencies import get_db
+from backend.app.models.demand import Demand
+from backend.app.models.scenario import Scenario
+from backend.app.schemas.demands import DemandCreate
 from sqlalchemy import select
-from app.additional.build_graph import build_graph
 
 router = APIRouter()
 

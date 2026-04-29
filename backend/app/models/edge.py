@@ -1,14 +1,15 @@
 from sqlalchemy import Float, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.models.base import Base
+from backend.app.models.base import Base
 
 
-class Demand(Base):
-    __tablename__ = "demands"
+class Edge(Base):
+    __tablename__ = "edges"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     scenario_id: Mapped[int] = mapped_column(Integer, ForeignKey("scenarios.id"))
     source: Mapped[int] = mapped_column(Integer)
     target: Mapped[int] = mapped_column(Integer)
-    traffic: Mapped[float] = mapped_column(Float)
+    capacity: Mapped[float] = mapped_column(Float)
+    weight: Mapped[float] = mapped_column(Float, default=1.0)
