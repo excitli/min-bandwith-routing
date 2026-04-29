@@ -1,8 +1,7 @@
-import networkx as nx
 import pyomo.environ as pyo
 from typing import Any, List, Dict
 from collections import defaultdict
-from app.schemas.optimize import RoutingType, OptimizationObjective
+from backend.app.schemas.optimize import RoutingType, OptimizationObjective
 
 
 def solve_routing(
