@@ -38,7 +38,7 @@ def solve_routing(
     elif routing_type == RoutingType.INTEGRAL:
         model.x = pyo.Var(model.PATHS, domain=pyo.NonNegativeIntegers)
     if objective_type == OptimizationObjective.MAX_FREE_CAP:
-        model.u_u = pyo.Var(domain=pyo.Reals)
+        model.u_u = pyo.Var(domain=pyo.NonNegativeReals)
 
 
     #constraints
@@ -109,7 +109,7 @@ def solve_routing(
         }
 
     return {
-        "status": str(results.solver.status),
+        "status": str(results.solver.termination_condition),
         "objective_value": pyo.value(model.obj),
         "paths": output_paths,
         "duals": duals,
