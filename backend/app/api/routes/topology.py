@@ -83,6 +83,6 @@ async def get_topology(scenario_id:int, db: AsyncSession = Depends(get_db)):
     response = TopologyResponse.from_networkx(
         scenario_id=scenario_id,
         graph=topology_data["graph"],
-        edges_raw=topology_data["edges_raw"],
+        edges_raw=topology_data["edges"],
     )
     return response
