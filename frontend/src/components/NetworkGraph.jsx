@@ -2,9 +2,10 @@ import React, { useMemo } from "react";
 import CytoscapeComponent from "react-cytoscapejs";
 
 function getEdgeColor(utilization = 0) {
-  if (utilization >= 0.9) return "#ef4444";
-  if (utilization >= 0.7) return "#f59e0b";
-  if (utilization >= 0.4) return "#22c55e";
+  if (utilization >= 1) return "#7f1d1d";
+  if (utilization >= 0.85) return "#ef4444";
+  if (utilization >= 0.6) return "#f59e0b";
+  if (utilization >= 0.3) return "#22c55e";
   return "#3b82f6";
 }
 
@@ -44,7 +45,7 @@ export default function NetworkGraph({
           id: edge.id,
           source: edge.source,
           target: edge.target,
-          label: `${edge.id} | W=${edge.weight} | ${load}/${capacity}`,
+          label:`${load}/${capacity} (${Math.round(utilization * 100)}%)`,
           utilization,
           color: getEdgeColor(utilization)
         }
@@ -80,7 +81,7 @@ export default function NetworkGraph({
     {
       selector: "edge",
       style: {
-        width: 4,
+        width: "mapData(utilization, 0, 1, 3, 10)",
         label: "data(label)",
         "curve-style": "bezier",
         "target-arrow-shape": "triangle",

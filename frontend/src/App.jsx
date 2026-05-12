@@ -3,13 +3,22 @@ import ControlPanel from "./components/ControlPanel";
 import NetworkGraph from "./components/NetworkGraph";
 import ResultsPanel from "./components/ResultsPanel";
 import { mockNetwork } from "./data/MockData";
-import { createTopology, createDemands, createOptimization } from "./api/NetworkApi";
+import {
+  createTopology,
+  createDemands,
+  createOptimization,
+  saveOptimizationResult
+} from "./api/NetworkApi";
 
 function App() {
+  const [graphRow, setGraphRow] = useState("Выберите способ работы с графом")
   const [mode, setMode] = useState("BIFURCATED");
   const [type, setType] = useState("NAX_FREE_CAP");
   const [result, setResult] = useState(null);
   const [demands, setDemands] = useState([]);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [topologyName, setTopologyName] = useState("");
 
   const [nodes, setNodes] = useState(
     mockNetwork.nodes.map((node, index) => ({
@@ -29,119 +38,119 @@ function App() {
   const [nodeCounter, setNodeCounter] = useState(mockNetwork.nodes.length);
 
   const handleRun = async () => {
-    try {
-      console.log("Запуск режима:", mode);
+  try {
+    setLoading(true);
+    setErrorMessage("");
 
-      if (edges.length === 0) {
-        alert("Добавь хотя бы одно ребро");
-        return;
-      }
-
-      if (demands.length === 0) {
-        alert("Добавь хотя бы один demand");
-        return;
-      }
-
-      const hasInvalidInput = edges.some((edge) => {
-        const source = Number(edge.source);
-        const target = Number(edge.target);
-        const weight = Number(edge.weight);
-        const capacity = Number(edge.capacity);
-
-        return (
-          !Number.isInteger(source) || source <= 0 ||
-          !Number.isInteger(target) || target <= 0 ||
-          !Number.isInteger(weight) || weight <= 0 ||
-          !Number.isInteger(capacity) || capacity <= 0
-        );
-      });
-
-      if (hasInvalidInput) {
-        alert("Есть неверные данные в ребрах");
-        return;
-      }
-
-      const topologyPayload = {
-        name: "test topology",
-        edges: edges.map((edge) => ({
-          source: Number(edge.source),
-          target: Number(edge.target),
-          capacity: Number(edge.capacity),
-          weight: Number(edge.weight)
-        }))
-      };
-
-      console.log("Topology payload:", topologyPayload);
-
-      const topologyResponse = await createTopology(topologyPayload);
-      console.log("Topology saved:", topologyResponse);
-
-      const scenarioId = topologyResponse["Success. scenario_id"];
-
-      const nodeIds = new Set(nodes.map((node) => Number(node.id)));
-
-      const hasInvalidDemand = demands.some((demand) => {
-        const source = Number(demand.source);
-        const target = Number(demand.target);
-        const traffic = Number(demand.traffic);
-
-        return (
-          !nodeIds.has(source) ||
-          !nodeIds.has(target) ||
-          source == target ||
-          !Number.isInteger(traffic) ||
-          traffic <= 0
-        );
-      })
-
-      if (hasInvalidDemand) {
-        alert("Есть некорректные demands или узлы demand отсутствуют в графе");
-        return;
-      }
-
-      const demandsPayload = {
-        scenario_id: scenarioId,
-        demands: demands.map((demand) => ({
-          source: Number(demand.source),
-          target: Number(demand.target),
-          traffic: Number(demand.traffic)
-        }))
-      };
-
-      console.log("Demands payload:", demandsPayload);
-
-      const demandsResponse = await createDemands(demandsPayload);
-      console.log("Demands saved:", demandsResponse);
-
-      const optimizationPayload = {
-        scenario_id: scenarioId,
-        k_paths: 3,
-        routing_type: mode,
-        optimization_objective: type
-      };
-
-      console.log("Optimization payload:", optimizationPayload);
-
-      const optimizationResponse = await createOptimization(optimizationPayload);
-      console.log("Optimization result:", optimizationResponse);
-
-      const normalizedResult = {
-        objective: optimizationResponse.results.objective_value,
-        paths: optimizationResponse.results.paths.map((item) => ({
-          demandId: item.path_id,
-          path: item.nodes,
-          flow: item.flow
-        })),
-        edgeLoads: []
-      };
-
-      setResult(normalizedResult);
-    } catch (error) {
-      console.error("Status:", error.response?.status);
-      console.error("Data:", JSON.stringify(error.response?.data, null, 2));
-      console.error("Full error:", error);
+    if (!topologyName.trim()) {
+      setErrorMessage("Введите название топологии");
+      return;
     }
-  };
+
+    if (edges.length === 0) {
+      setErrorMessage("Добавьте хотя бы одно ребро");
+      return;
+    }
+
+    if (demands.length === 0) {
+      setErrorMessage("Добавьте хотя бы один demand");
+      return;
+    }
+
+    const topologyPayload = {
+      name: topologyName,
+      edges: edges.map((edge) => ({
+        source: Number(edge.source),
+        target: Number(edge.target),
+        capacity: Number(edge.capacity),
+        weight: Number(edge.weight)
+      }))
+    };
+
+    const topologyResponse = await createTopology(topologyPayload);
+
+    const scenarioId = topologyResponse["Success. scenario_id"];
+
+    const demandsPayload = {
+      scenario_id: scenarioId,
+      demands: demands.map((demand) => ({
+        source: Number(demand.source),
+        target: Number(demand.target),
+        traffic: Number(demand.traffic)
+      }))
+    };
+
+    await createDemands(demandsPayload);
+
+    const optimizationPayload = {
+      scenario_id: scenarioId,
+      k_paths: 3,
+      routing_type: mode,
+      optimization_objective: type
+    };
+
+    const optimizationResponse = await createOptimization(optimizationPayload);
+
+    const edgeLoadMap = {};
+
+    optimizationResponse.results.paths.forEach((pathObj) => {
+      const pathNodes = pathObj.nodes;
+      const flow = pathObj.flow;
+
+      for (let i = 0; i < pathNodes.length - 1; i++) {
+        const edgeId = `${pathNodes[i]}-${pathNodes[i + 1]}`;
+
+        if (!edgeLoadMap[edgeId]) {
+          edgeLoadMap[edgeId] = 0;
+        }
+
+        edgeLoadMap[edgeId] += flow;
+      }
+    });
+
+    const edgeLoads = edges.map((edge) => {
+      const load = edgeLoadMap[edge.id] || 0;
+
+      return {
+        edgeId: edge.id,
+        load,
+        utilization: load / edge.capacity
+      };
+    });
+
+    const normalizedResult = {
+      objective: optimizationResponse.results.objective_value,
+      paths: optimizationResponse.results.paths.map((item) => ({
+        demandId: item.path_id,
+        path: item.nodes,
+        flow: item.flow
+      })),
+      edgeLoads
+    };
+
+    setResult(normalizedResult);
+
+    await saveOptimizationResult({
+      scenario_id: scenarioId,
+      objective: type,
+      routing_type: mode,
+      objective_value: optimizationResponse.results.objective_value,
+      paths: optimizationResponse.results.paths,
+      duals: optimizationResponse.results.duals || []
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    if (error.response?.data?.detail) {
+      setErrorMessage(error.response.data.detail);
+    } else {
+      setErrorMessage("Ошибка сервера");
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleAddDemand = (newDemand) => {
     setDemands((prev) => [...prev, newDemand]);
@@ -157,11 +166,11 @@ function App() {
 
   const handleAddNode = () => {
     const nextNodeNumber = nodeCounter + 1;
-    const newNodeId = nextNodeNumber;
+    const newNodeId = String(nextNodeNumber);
 
     const newNode = {
       id: newNodeId,
-      label: nextNodeNumber,
+      label: String(nextNodeNumber),
       position: {
         x: 150 + Math.random() * 400,
         y: 120 + Math.random() * 300
@@ -170,14 +179,17 @@ function App() {
 
     setNodes((prev) => [...prev, newNode]);
     setNodeCounter((prev) => prev + 1);
+    setGraphRow(`⚠️  Узел ${nextNodeNumber} добавлен`);
   };
 
   const handleDeleteNodeMode = () => {
     setGraphMode((prev) => (prev === "deleteNode" ? "none" : "deleteNode"));
+    setGraphRow("⚠️  Нажмите узел, который хотите удалить");
     setSelectedNodes([]);
   };
 
   const handleAddEdgeMode = () => {
+
     const parsedWeight = Number(edgeWeight);
     const parsedCapacity = Number(edgeCapacity);
 
@@ -188,9 +200,11 @@ function App() {
 
     if (!isValidWeight || !isValidCapacity) {
       alert("Weight и Capacity должны быть положительными целыми числами");
+      setGraphRow("⚠️  Вес и пропуск должны быть числами");
       return;
     }
 
+    setGraphRow("⚠️  Выберите первый узел");
     setGraphMode((prev) => (prev === "addEdge" ? "none" : "addEdge"));
     setSelectedNodes([]);
   };
@@ -211,6 +225,7 @@ function App() {
     }
 
     if (graphMode === "addEdge") {
+      setGraphRow("⚠️  Выберите второй узел");
       setSelectedNodes((prevSelected) => {
         const updatedSelected = [...prevSelected, nodeId];
 
@@ -250,6 +265,7 @@ function App() {
             return newEdges;
           });
 
+          setGraphRow(`⚠️  Ребро между узлами ${sourceId} и ${targetId} создано`);
           setGraphMode("none");
           setEdgeCapacity("");
           setEdgeWeight("");
@@ -270,7 +286,24 @@ function App() {
         fontFamily: "Arial, sans-serif"
       }}
     >
-      <h1 style={{ marginTop: 0 }}>Minimum Bandwidth Routing</h1>
+      <h1 style={{ marginTop: 0 }}>Маршрутизация с минимальной пропускной способностью</h1>
+
+      {
+        errorMessage && (
+          <div
+            style={{
+              background: "#fee2e2",
+              color: "#991b1b",
+              padding: "12px",
+              borderRadius: "10px",
+              marginBottom: "16px",
+              border: "1px solid #fecaca"
+            }}
+          >
+            {errorMessage}
+          </div>
+        )
+      }
 
       <div
         style={{
@@ -285,10 +318,17 @@ function App() {
           type={type}
           edgeWeight={edgeWeight}
           edgeCapacity={edgeCapacity}
+          graphRow={graphRow}
+          topologyName={topologyName}
+          loading={loading}
+
           setType={setType}
           setMode={setMode}
           setEdgeWeight={setEdgeWeight}
           setEdgeCapacity={setEdgeCapacity}
+          setGraphRow={setGraphRow}
+          setTopologyName={setTopologyName}
+
           onRun={handleRun}
           onAddNode={handleAddNode}
           onDeleteNodeMode={handleDeleteNodeMode}

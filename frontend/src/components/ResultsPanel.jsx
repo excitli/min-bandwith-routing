@@ -25,6 +25,35 @@ export default function ResultsPanel({
       >
         <h2 style={{ marginTop: 0 }}>Результаты</h2>
 
+        <div>
+          <table>
+            <tbody>
+              <tr>
+                <td><div style={{width: "10px", height: "10px", background: "#3b82f6"}}></div></td>
+                <td style={{paddingLeft: "10px", fontSize: "13px"}}>0-30%</td>
+              </tr>
+              <tr>
+                <td><div style={{width: "10px", height: "10px", background: "#22c55e"}}></div></td>
+                <td style={{paddingLeft: "10px", fontSize: "13px"}}>30-60%</td>
+              </tr>
+              <tr>
+                <td><div style={{width: "10px", height: "10px", background: "#f59e0b"}}></div></td>
+                <td style={{paddingLeft: "10px", fontSize: "13px"}}>60-85%</td>
+              </tr>
+              <tr>
+                <td><div style={{width: "10px", height: "10px", background: "#ef4444"}}></div></td>
+                <td style={{paddingLeft: "10px", fontSize: "13px"}}>85-100%</td>
+              </tr>
+              <tr>
+                <td><div style={{width: "10px", height: "10px", background: "#7f1d1d"}}></div></td>
+                <td style={{paddingLeft: "10px", fontSize: "13px"}}>Перегруз</td>
+              </tr>
+            </tbody>
+
+          </table>
+
+        </div>
+
         {!result ? (
           <p>Пока нет расчёта</p>
         ) : (
@@ -55,10 +84,10 @@ export default function ResultsPanel({
           background: "#fff"
         }}
       >
-        <h2 style={{ marginTop: 0 }}>Demands</h2>
+        <h2 style={{ marginTop: 0 }}>Запросы трафика</h2>
 
         {demands.length === 0 ? (
-          <p>Пока demands не добавлены</p>
+          <p>Пока ничего не добавлено</p>
         ) : (
           <>
           <ul style={{ paddingLeft: "18px" }}>
