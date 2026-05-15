@@ -5,7 +5,7 @@ from backend.app.core.dependencies import get_db
 from backend.app.models.demand import Demand
 from backend.app.models.scenario import Scenario
 from backend.app.schemas.demands import DemandCreate
-from sqlalchemy import select
+from sqlalchemy import select, delete
 
 router = APIRouter()
 
@@ -38,3 +38,15 @@ async def create_demand(data: DemandCreate, db: AsyncSession = Depends(get_db)):
 
     await db.commit()
     return {"ok": True}
+
+
+@router.delete("/{scenario_id}")
+async def delete_demands(scenario_id: int, db: AsyncSession = Depends(get_db)):
+    scenario = await db.get(Scenario, scenario_id)
+    if not scenario:
+        raise HTTPException(status_code=404, detail="Scenario not found, deletion is impossible")
+
+    await db.execute(delete(Demand).where(Demand.scenario_id==scenario_id))
+    await db.commit()
+
+    return {"deleted": True}
