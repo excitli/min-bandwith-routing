@@ -16,10 +16,15 @@ export default function ControlPanel({
   onDeleteNodeMode,
   onAddEdgeMode,
   onAddDemand,
-  topologyName,
-  setTopologyName,
   onDeleteEdgeMode,
   loading,
+
+  savedTopologies,
+  selectedScenarioId,
+  isEditing,
+  onLoadTopology,
+  onFetchTopologies,
+  onNewTopology,
 }) {
   const [startNode, setStartNode] = useState("");
   const [endNode, setEndNode] = useState("");
@@ -91,27 +96,79 @@ export default function ControlPanel({
           background: "#fff"
         }}
       >
-        <h2 style={{ marginTop: 0 }}>Создание графа</h2>
 
-        <div style={{ marginBottom: "16px" }}>
-          <label style={{ display: "block", marginBottom: "8px" }}>
-            Название топологии
+         <div style={{ marginBottom: "16px" }}>
+          {/*<label style={{ display: "block", marginBottom: "8px" }}>
+            Сохранённые топологии
           </label>
 
-          <input
-            type="text"
-            value={topologyName}
-            onChange={(e) => setTopologyName(e.target.value)}
-            placeholder="Например: network_1"
+          <div style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
+            <select
+              onChange={(e) => {
+                const id = e.target.value;
+                if (id) onLoadTopology(Number(id));
+              }}
+              style={{
+                flex: 1,
+                padding: "10px",
+                borderRadius: "8px",
+                border: "1px solid #ccc"
+              }}
+            >
+              <option value="">Выберите топологию...</option>
+              {savedTopologies.map((top) => (
+                <option key={top.scenario_id} value={top.scenario_id}>
+                  {top.name} (ID: {top.scenario_id})
+                </option>
+              ))}
+            </select>
+
+            <button
+              onClick={onFetchTopologies}
+              style={{
+                padding: "10px",
+                border: "none",
+                borderRadius: "8px",
+                background: "#538DE4",
+                color: "#fff",
+                cursor: "pointer"
+              }}
+              title="Обновить список"
+            >
+              🔄
+            </button>
+          </div>  */}
+
+          {isEditing && (
+            <div style={{
+              padding: "8px",
+              background: "#e0f2fe",
+              borderRadius: "6px",
+              fontSize: "12px",
+              marginBottom: "8px"
+            }}>
+              Режим редактирования: ID {selectedScenarioId}
+            </div>
+          )}
+
+          <button
+            onClick={onNewTopology}
             style={{
               width: "100%",
               padding: "10px",
-              borderRadius: "8px",
               border: "1px solid #ccc",
-              boxSizing: "border-box"
+              borderRadius: "8px",
+              background: "#fff",
+              cursor: "pointer",
+              fontSize: "14px"
             }}
-          />
+          >
+            + Новая топология
+          </button>
         </div>
+
+        <div style={{ width: "100%", height: "1px", backgroundColor: "#A6A6A6", marginBottom: "15px" }}></div>
+        <h2 style={{ marginTop: 0 }}>Создание графа</h2>
 
         <div
           style={{
@@ -443,7 +500,7 @@ export default function ControlPanel({
               border: "1px solid #ccc"
             }}
           >
-            <option value="MAX_FREE_CAP">Максимум свободной пропускной способности</option>
+            <option value="NAX_FREE_CAP">Максимум свободной пропускной способности</option>
             <option value="MIN_BANDWITH">Минимизация используемой пропускной способности</option>
           </select>
         </div>

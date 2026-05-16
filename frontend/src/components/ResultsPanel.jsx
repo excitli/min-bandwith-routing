@@ -5,7 +5,10 @@ export default function ResultsPanel({
   result,
   demands = [],
   deleteCurDemand,
-  deleteAllDemands
+  deleteAllDemands,
+  topologyIdInput,
+  setTopologyIdInput,
+  onLoadTopology
 }) {
   return (
     <div
@@ -130,6 +133,50 @@ export default function ResultsPanel({
           </div>
         </>
         )}
+      </div>
+
+      <div
+        style={{
+          border: "1px solid #d1d5db",
+          borderRadius: "12px",
+          padding: "16px",
+          background: "#fff"
+        }}
+      >
+        <h2 style={{ marginTop: 0 }}>Загрузка топологии</h2>
+
+        <input
+          type="number"
+          placeholder="Введите ID топологии"
+          value={topologyIdInput}
+          onChange={(e) => setTopologyIdInput(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "10px",
+            borderRadius: "8px",
+            border: "1px solid #ccc",
+            boxSizing: "border-box",
+            backgroundColor: "#fff",
+          }}
+        />
+
+        <button
+          onClick={() => onLoadTopology(Number(topologyIdInput))}
+          style={{
+              maxWidth: "91px",
+              width: "100%",
+              padding: "12px",
+              border: "none",
+              borderRadius: "8px",
+              background: "#538DE4",
+              color: "#fff",
+              cursor: "pointer",
+              fontSize: "14px",
+              marginTop: "10px"
+            }}
+        >
+          Загрузить
+        </button>
       </div>
     </div>
   );

@@ -23,11 +23,24 @@ export async function createOptimization(payload) {
 }
 
 export async function saveOptimizationResult(payload) {
-    const response = await api.post("/results", payload);
+    const response = await api.post("/optimization/results", payload);
+    // const response = await api.post("/results", payload);
     return response.data;
 }
 
 export async function getOptimizationResults(scenarioId) {
-    const response = await api.get(`/optimizeResults/${scenarioId}`);
+    const response = await api.get(
+      `/optimization/optimizeResults/${scenarioId}`
+    );
+    return response.data;
+}
+
+export async function getTopologyById(scenarioId) {
+    const response = await api.get(`/topology/${scenarioId}`);
+    return response.data;
+}
+
+export async function getAllTopologies() {
+    const response = await api.get(`/topology/`);
     return response.data;
 }

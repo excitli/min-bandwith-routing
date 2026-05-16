@@ -7,7 +7,10 @@ import {
   createTopology,
   createDemands,
   createOptimization,
-  saveOptimizationResult
+  saveOptimizationResult,
+  getOptimizationResults,
+  getAllTopologies,
+  getTopologyById
 } from "./api/NetworkApi";
 
 function App() {
@@ -18,7 +21,11 @@ function App() {
   const [demands, setDemands] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [topologyName, setTopologyName] = useState("");
+  const [topologyIdInput, setTopologyIdInput] = useState("");
+
+  const [savedTopologies, setSavedTopologies] = useState([]);
+  const [selectedScenarioId, setSelectedScenarioId] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   const [nodes, setNodes] = useState(
     mockNetwork.nodes.map((node, index) => ({
@@ -42,11 +49,6 @@ function App() {
     setLoading(true);
     setErrorMessage("");
 
-    if (!topologyName.trim()) {
-      setErrorMessage("Введите название топологии");
-      return;
-    }
-
     if (edges.length === 0) {
       setErrorMessage("Добавьте хотя бы одно ребро");
       return;
@@ -57,22 +59,39 @@ function App() {
       return;
     }
 
-    const topologyPayload = {
-      name: topologyName,
-      edges: edges.map((edge) => ({
-        source: Number(edge.source),
-        target: Number(edge.target),
-        capacity: Number(edge.capacity),
-        weight: Number(edge.weight)
-      }))
-    };
+    let scenarioIdToUse = selectedScenarioId;
 
-    const topologyResponse = await createTopology(topologyPayload);
+    if (!isEditing || !scenarioIdToUse) {
+      const topologyPayload = {
+        name: `topology_${Date.now()}`,
+        edges: edges.map((edge) => ({
+          source: Number(edge.source),
+          target: Number(edge.target),
+          capacity: Number(edge.capacity),
+          weight: Number(edge.weight)
+        }))
+      };
+      console.log("TOPOLOGY PAYLOAD:", JSON.stringify(topologyPayload, null, 2));
 
-    const scenarioId = topologyResponse["Success. scenario_id"];
+      const topologyResponse = await createTopology(topologyPayload);
+
+      console.log("TOPOLOGY RESPONSE:", topologyResponse);
+
+      scenarioIdToUse =
+        topologyResponse?.["Success. scenario_id"] ??
+        topologyResponse?.scenario_id ??
+        topologyResponse?.data?.scenario_id;
+
+      if (!scenarioIdToUse) {
+        throw new Error("scenario_id не получен после createTopology");
+      }
+
+      setSelectedScenarioId(scenarioIdToUse);
+      setIsEditing(true);
+    }
 
     const demandsPayload = {
-      scenario_id: scenarioId,
+      scenario_id: scenarioIdToUse,
       demands: demands.map((demand) => ({
         source: Number(demand.source),
         target: Number(demand.target),
@@ -80,14 +99,17 @@ function App() {
       }))
     };
 
+    console.log("DEMANDS PAYLOAD:", JSON.stringify(demandsPayload, null, 2));
     await createDemands(demandsPayload);
 
     const optimizationPayload = {
-      scenario_id: scenarioId,
+      scenario_id: scenarioIdToUse,
       k_paths: 3,
       routing_type: mode,
       optimization_objective: type
     };
+
+    console.log("OPTIMIZATION PAYLOAD:", JSON.stringify(optimizationPayload, null, 2));
 
     const optimizationResponse = await createOptimization(optimizationPayload);
 
@@ -130,20 +152,46 @@ function App() {
 
     setResult(normalizedResult);
 
-    await saveOptimizationResult({
-      scenario_id: scenarioId,
+
+    setDemands([]);
+
+    console.log("Что отправляем в /optimization/results:", {
+      scenario_id: scenarioIdToUse,
       objective: type,
       routing_type: mode,
       objective_value: optimizationResponse.results.objective_value,
-      paths: optimizationResponse.results.paths,
-      duals: optimizationResponse.results.duals || []
+      paths: JSON.stringify(optimizationResponse.results.paths ?? []),
+      duals: JSON.stringify(optimizationResponse.results.duals ?? {})
     });
+
+    try {
+      await saveOptimizationResult({
+        scenario_id: Number(scenarioIdToUse),
+        objective: type,
+        routing_type: mode,
+        objective_value: optimizationResponse.results.objective_value,
+
+        paths: JSON.stringify(
+          optimizationResponse.results.paths ?? []
+        ),
+
+        duals: JSON.stringify(
+          optimizationResponse.results.duals ?? {}
+        )
+      });
+    } catch (e) {
+      console.error("SAVE OPTIMIZATION FAILED:", e?.response?.data || e.message);
+    }
 
   } catch (error) {
     console.error(error);
 
     if (error.response?.data?.detail) {
-      setErrorMessage(error.response.data.detail);
+      setErrorMessage(
+        Array.isArray(error.response.data.detail)
+          ? error.response.data.detail[0].msg
+          : error.response.data.detail
+      );
     } else {
       setErrorMessage("Ошибка сервера");
     }
@@ -151,6 +199,137 @@ function App() {
     setLoading(false);
   }
 };
+
+  const fetchTopologies = async () => {
+    try {
+      const data = await getAllTopologies();
+      setSavedTopologies(data);
+    } catch (error) {
+      console.error("Ошибка загрузки топологий:", error);
+      setErrorMessage("Не удалось загрузить список топологий");
+    }
+  };
+
+const loadTopology = async (scenarioId) => {
+    try {
+        setLoading(true);
+        setErrorMessage("");
+
+        const data = await getTopologyById(scenarioId);
+        console.log("TOPOLOGY DATA:", data);
+
+        const restoredNodes = data.nodes.map((nodeId) => ({
+            id: String(nodeId),
+            label: String(nodeId)
+        }));
+
+        const restoredEdges = data.edges.map((edge) => ({
+            id: `${edge.source}-${edge.target}`,
+            source: String(edge.source),
+            target: String(edge.target),
+            weight: edge.weight,
+            capacity: edge.capacity
+        }));
+
+        setNodes(restoredNodes);
+        setEdges(restoredEdges);
+
+        // ЗАГРУЖАЕМ РЕЗУЛЬТАТЫ ОПТИМИЗАЦИИ
+        try {
+            const optimizationData = await getOptimizationResults(scenarioId);
+
+            console.log("OPTIMIZATION DATA:", optimizationData);
+
+            if (optimizationData && optimizationData.length > 0) {
+
+                // берем последний результат
+                const latestResult =
+                    optimizationData[optimizationData.length - 1];
+                if (typeof latestResult.paths === "string") {
+                    try {
+                        latestResult.paths = JSON.parse(latestResult.paths);
+
+                    } catch {
+                        latestResult.paths = [];
+                    }
+                }
+                const edgeLoadMap = {};
+
+                latestResult.paths?.forEach((pathObj) => {
+                    const pathNodes = pathObj.nodes;
+                    const flow = pathObj.flow;
+
+                    for (let i = 0; i < pathNodes.length - 1; i++) {
+                        const edgeId = `${pathNodes[i]}-${pathNodes[i + 1]}`;
+
+                        edgeLoadMap[edgeId] =
+                            (edgeLoadMap[edgeId] || 0) + flow;
+                    }
+                });
+
+                const edgeLoads = restoredEdges.map((edge) => {
+                    const load = edgeLoadMap[edge.id] || 0;
+
+                    return {
+                        edgeId: edge.id,
+                        load,
+                        utilization: load / edge.capacity
+                    };
+                });
+
+                setResult({
+                    objective: latestResult.objective_value,
+
+                    paths: latestResult.paths?.map((item) => ({
+                        demandId: item.path_id,
+                        path: item.nodes,
+                        flow: item.flow
+                    })) || [],
+
+                    edgeLoads
+                });
+
+            } else {
+                setResult(null);
+            }
+
+        } catch (optError) {
+            console.log("Нет результатов оптимизации для этой топологии");
+            setResult(null);
+        }
+
+        const maxNodeId = Math.max(...data.nodes.map(n => Number(n)), 0);
+        setNodeCounter(maxNodeId);
+
+        setSelectedScenarioId(scenarioId);
+        setIsEditing(true);
+        setGraphRow(`Загружена топология: ${scenarioId}`);
+
+    } catch (error) {
+        console.error(error);
+        setErrorMessage("Ошибка загрузки топологии");
+    } finally {
+        setLoading(false);
+    }
+};
+
+  const handleNewTopology = () => {
+    setNodes(mockNetwork.nodes.map((node, index) => ({
+      ...node,
+      position: {
+        x: 180 + index * 120,
+        y: index % 2 === 0 ? 220 : 320
+      }
+    })));
+    setEdges(mockNetwork.edges);
+    setDemands([]);
+    setResult(null);
+    setSelectedScenarioId(null);
+    setIsEditing(false);
+    setNodeCounter(mockNetwork.nodes.length);
+    setGraphRow("Выберите способ работы с графом");
+    setErrorMessage("");
+  };
 
   const handleAddDemand = (newDemand) => {
     setDemands((prev) => [...prev, newDemand]);
@@ -319,21 +498,27 @@ function App() {
           edgeWeight={edgeWeight}
           edgeCapacity={edgeCapacity}
           graphRow={graphRow}
-          topologyName={topologyName}
           loading={loading}
+          savedTopologies={savedTopologies}
+          selectedScenarioId={selectedScenarioId}
+          isEditing={isEditing}
 
           setType={setType}
           setMode={setMode}
           setEdgeWeight={setEdgeWeight}
           setEdgeCapacity={setEdgeCapacity}
           setGraphRow={setGraphRow}
-          setTopologyName={setTopologyName}
 
           onRun={handleRun}
           onAddNode={handleAddNode}
           onDeleteNodeMode={handleDeleteNodeMode}
           onAddEdgeMode={handleAddEdgeMode}
           onAddDemand={handleAddDemand}
+          onLoadTopology={loadTopology}
+          onFetchTopologies={fetchTopologies}
+          onNewTopology={handleNewTopology}
+
+
         />
 
         <NetworkGraph
@@ -348,8 +533,11 @@ function App() {
         <ResultsPanel
           result={result}
           demands={demands}
+          topologyIdInput={topologyIdInput}
           deleteCurDemand={deleteCurDemand}
           deleteAllDemands={deleteAllDemands}
+          setTopologyIdInput={setTopologyIdInput}
+          onLoadTopology={loadTopology}
         />
       </div>
     </div>

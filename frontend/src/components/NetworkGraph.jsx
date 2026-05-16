@@ -107,7 +107,7 @@ export default function NetworkGraph({
         background: "#fff"
       }}
     >
-      <CytoscapeComponent
+      {/* <CytoscapeComponent
         elements={elements}
         stylesheet={stylesheet}
         layout={{ name: "preset", fit: true, padding: 30 }}
@@ -121,6 +121,27 @@ export default function NetworkGraph({
             }
           });
         }}
+      /> */}
+      <CytoscapeComponent
+          elements={elements}
+          stylesheet={stylesheet}
+          layout={{
+              name: elements.some(e => e.position) ? "preset" : "cose",
+              animate: true,
+              padding: 30,
+              componentSpacing: 100,
+              nodeRepulsion: 400000
+          }}
+          style={{ width: "100%", height: "100%" }}
+          cy={(cy) => {
+              cy.off("tap", "node");
+              cy.on("tap", "node", (event) => {
+                  const nodeId = event.target.id();
+                  if (onNodeClick) {
+                      onNodeClick(nodeId);
+                  }
+              });
+          }}
       />
     </div>
   );
