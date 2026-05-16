@@ -37,8 +37,9 @@ services:
         condition: service_healthy
     working_dir: /app
     command: >
-      sh -c "sleep 3 && 
-             uv run alembic --config backend/alembic.ini upgrade head && 
+      sh -c "sleep 2 &&
+             PYTHONPATH=. pytest backend/app/tests/test_kkt.py -v &&
+             uv run alembic upgrade head &&
              uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*' --reload"
 
   frontend:
