@@ -5,6 +5,7 @@ from backend.app.core.dependencies import get_db
 from backend.app.models.demand import Demand
 from backend.app.models.scenario import Scenario
 from backend.app.schemas.demands import DemandCreate
+
 from sqlalchemy import select, delete
 
 router = APIRouter()

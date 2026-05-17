@@ -1,10 +1,11 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import CytoscapeComponent from "react-cytoscapejs";
 
 function getEdgeColor(utilization = 0) {
-  if (utilization >= 0.9) return "#ef4444";
-  if (utilization >= 0.7) return "#f59e0b";
-  if (utilization >= 0.4) return "#22c55e";
+  if (utilization >= 1) return "#7f1d1d";
+  if (utilization >= 0.85) return "#ef4444";
+  if (utilization >= 0.6) return "#f59e0b";
+  if (utilization >= 0.3) return "#22c55e";
   return "#3b82f6";
 }
 
@@ -44,7 +45,7 @@ export default function NetworkGraph({
           id: edge.id,
           source: edge.source,
           target: edge.target,
-          label: `${edge.id} | W=${edge.weight} | ${load}/${capacity}`,
+          label:`${load}/${capacity} (${Math.round(utilization * 100)}%)`,
           utilization,
           color: getEdgeColor(utilization)
         }
@@ -80,7 +81,7 @@ export default function NetworkGraph({
     {
       selector: "edge",
       style: {
-        width: 4,
+        width: "mapData(utilization, 0, 1, 3, 10)",
         label: "data(label)",
         "curve-style": "bezier",
         "target-arrow-shape": "triangle",
@@ -97,29 +98,35 @@ export default function NetworkGraph({
 
   return (
     <div
-      style={{
-        width: "100%",
-        height: "619px",
-        border: "1px solid #d1d5db",
+        style={{
+          width: "100%",
+          height: "619px",
+          border: "1px solid #d1d5db",
         borderRadius: "12px",
         overflow: "hidden",
         background: "#fff"
       }}
     >
       <CytoscapeComponent
-        elements={elements}
-        stylesheet={stylesheet}
-        layout={{ name: "preset", fit: true, padding: 30 }}
-        style={{ width: "100%", height: "100%" }}
-        cy={(cy) => {
-          cy.off("tap", "node");
-          cy.on("tap", "node", (event) => {
-            const nodeId = event.target.id();
-            if (onNodeClick) {
-              onNodeClick(nodeId);
-            }
-          });
-        }}
+          elements={elements}
+          stylesheet={stylesheet}
+          layout={{
+              name: elements.some(e => e.position) ? "preset" : "cose",
+              animate: true,
+              padding: 30,
+              componentSpacing: 100,
+              nodeRepulsion: 400000
+          }}
+          style={{ maxWidth: "780px", width: "100%", height: "100%" }}
+          cy={(cy) => {
+              cy.off("tap", "node");
+              cy.on("tap", "node", (event) => {
+                  const nodeId = event.target.id();
+                  if (onNodeClick) {
+                      onNodeClick(nodeId);
+                  }
+              });
+          }}
       />
     </div>
   );

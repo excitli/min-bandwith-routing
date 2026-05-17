@@ -1,19 +1,27 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 export default function ControlPanel({
   mode,
   type,
   edgeWeight,
   edgeCapacity,
+  graphRow,
   setMode,
   setType,
   setEdgeWeight,
   setEdgeCapacity,
+  setGraphRow,
   onRun,
   onAddNode,
   onDeleteNodeMode,
   onAddEdgeMode,
-  onAddDemand
+  onAddDemand,
+  loading,
+
+  selectedScenarioId,
+  isEditing,
+  onLoadTopology,
+  onNewTopology,
 }) {
   const [startNode, setStartNode] = useState("");
   const [endNode, setEndNode] = useState("");
@@ -21,7 +29,7 @@ export default function ControlPanel({
 
   const handleAddDemandClick = () => {
     if (!startNode.trim() || !endNode.trim() || !traffic.trim()) {
-      alert("Заполни все поля demand");
+      alert("Заполни все поля запроса трафика");
       return;
     }
 
@@ -40,7 +48,7 @@ export default function ControlPanel({
     }
 
     if (parsedStart === parsedEnd) {
-      alert("Начало и конец demand не должны совпадать");
+      alert("Начало и конец запроса трафика не должны совпадать");
       return;
     }
 
@@ -85,6 +93,37 @@ export default function ControlPanel({
           background: "#fff"
         }}
       >
+
+         <div style={{ marginBottom: "16px" }}>
+          {isEditing && (
+            <div style={{
+              padding: "8px",
+              background: "#e0f2fe",
+              borderRadius: "6px",
+              fontSize: "12px",
+              marginBottom: "8px"
+            }}>
+              Режим редактирования: ID {selectedScenarioId}
+            </div>
+          )}
+
+          <button
+            onClick={onNewTopology}
+            style={{
+              width: "100%",
+              padding: "10px",
+              border: "1px solid #ccc",
+              borderRadius: "8px",
+              background: "#fff",
+              cursor: "pointer",
+              fontSize: "14px"
+            }}
+          >
+            + Новая топология
+          </button>
+        </div>
+
+        <div style={{ width: "100%", height: "1px", backgroundColor: "#A6A6A6", marginBottom: "15px" }}></div>
         <h2 style={{ marginTop: 0 }}>Создание графа</h2>
 
         <div
@@ -166,14 +205,14 @@ export default function ControlPanel({
         >
           <div>
             <label style={{ display: "block", marginBottom: "8px" }}>
-              Weight:
+              Вес:
             </label>
             <input
               type="number"
               className="number-input"
               min="1"
               step="1"
-              placeholder="Ex: 15"
+              placeholder="Пр: 15"
               value={edgeWeight}
               onChange={(e) => setEdgeWeight(e.target.value)}
               style={{
@@ -189,14 +228,14 @@ export default function ControlPanel({
 
           <div>
             <label style={{ display: "block", marginBottom: "8px" }}>
-              Capacity:
+              Пропуск:
             </label>
             <input
               type="number"
               className="number-input"
               min="1"
               step="1"
-              placeholder="Ex: 8"
+              placeholder="Пр: 8"
               value={edgeCapacity}
               onChange={(e) => setEdgeCapacity(e.target.value)}
               style={{
@@ -226,6 +265,17 @@ export default function ControlPanel({
         >
           Добавить ребро
         </button>
+        <div
+          style={{
+            marginTop: "18px",
+            fontSize: "10px",
+            textAlign: "right",
+            color: "#9a0000",
+            fontWeight: "bold"
+          }}
+        >
+          {graphRow}
+        </div>
       </div>
 
       <div
@@ -236,7 +286,7 @@ export default function ControlPanel({
           background: "#fff"
         }}
       >
-        <h2 style={{ marginTop: 0 }}>New demand</h2>
+        <h2 style={{ marginTop: 0 }}>Новый запрос</h2>
 
         <div
           style={{
@@ -255,7 +305,7 @@ export default function ControlPanel({
               className="number-input"
               min="1"
               step="1"
-              placeholder="Ex: 1"
+              placeholder="Пр: 1"
               value={startNode}
               onChange={(e) => setStartNode(e.target.value)}
               style={{
@@ -278,7 +328,7 @@ export default function ControlPanel({
               className="number-input"
               min="1"
               step="1"
-              placeholder="Ex: 4"
+              placeholder="Пр: 4"
               value={endNode}
               onChange={(e) => setEndNode(e.target.value)}
               style={{
@@ -301,7 +351,7 @@ export default function ControlPanel({
               className="number-input"
               min="1"
               step="1"
-              placeholder="Ex: 10"
+              placeholder="Пр: 10"
               value={traffic}
               onChange={(e) => setTraffic(e.target.value)}
               style={{
@@ -374,7 +424,7 @@ export default function ControlPanel({
 
         <div style={{ marginBottom: "16px" }}>
           <label style={{ display: "block", marginBottom: "8px" }}>
-            Routing type
+            Тип маршрутизации
           </label>
 
           <select
@@ -387,13 +437,13 @@ export default function ControlPanel({
               border: "1px solid #ccc"
             }}
           >
-            <option value="BIFURCATED">Bifurcated (LP)</option>
-            <option value="NON_BIFURCATED">Non-Bifurcated (MILP)</option>
-            <option value="INTEGRAL">Integral Routing</option>
+            <option value="BIFURCATED">Разделяемая маршрутизация (LP)</option>
+            <option value="NON_BIFURCATED">Неразделяемая маршрутизация (MILP)</option>
+            <option value="INTEGRAL">Целочисленная маршрутизация</option>
           </select>
 
           <label style={{ display: "block", marginBottom: "8px", marginTop: "18px" }}>
-            Objective type
+            Целевая функция
           </label>
 
           <select
@@ -406,25 +456,26 @@ export default function ControlPanel({
               border: "1px solid #ccc"
             }}
           >
-            <option value="NAX_FREE_CAP">Max Free Capacity</option>
-            <option value="MIN_BANDWITH">MIN_BANDWITH</option>
+            <option value="NAX_FREE_CAP">Максимум свободной пропускной способности</option>
+            <option value="MIN_BANDWITH">Минимизация используемой пропускной способности</option>
           </select>
         </div>
 
         <button
           onClick={onRun}
+          disabled={loading}
           style={{
             width: "100%",
             padding: "12px",
             border: "none",
             borderRadius: "8px",
-            background: "#538DE4",
+            background: loading ? "#94a3b8" : "#538DE4",
             color: "#fff",
-            cursor: "pointer",
+            cursor: loading ? "not-allowed" : "pointer",
             fontSize: "14px"
           }}
         >
-          Запустить расчёт
+          {loading ? "Расчёт..." : "Запустить расчёт"}
         </button>
       </div>
     </div>
