@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 export default function ControlPanel({
   mode,
@@ -16,14 +16,11 @@ export default function ControlPanel({
   onDeleteNodeMode,
   onAddEdgeMode,
   onAddDemand,
-  onDeleteEdgeMode,
   loading,
 
-  savedTopologies,
   selectedScenarioId,
   isEditing,
   onLoadTopology,
-  onFetchTopologies,
   onNewTopology,
 }) {
   const [startNode, setStartNode] = useState("");
@@ -98,47 +95,6 @@ export default function ControlPanel({
       >
 
          <div style={{ marginBottom: "16px" }}>
-          {/*<label style={{ display: "block", marginBottom: "8px" }}>
-            Сохранённые топологии
-          </label>
-
-          <div style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
-            <select
-              onChange={(e) => {
-                const id = e.target.value;
-                if (id) onLoadTopology(Number(id));
-              }}
-              style={{
-                flex: 1,
-                padding: "10px",
-                borderRadius: "8px",
-                border: "1px solid #ccc"
-              }}
-            >
-              <option value="">Выберите топологию...</option>
-              {savedTopologies.map((top) => (
-                <option key={top.scenario_id} value={top.scenario_id}>
-                  {top.name} (ID: {top.scenario_id})
-                </option>
-              ))}
-            </select>
-
-            <button
-              onClick={onFetchTopologies}
-              style={{
-                padding: "10px",
-                border: "none",
-                borderRadius: "8px",
-                background: "#538DE4",
-                color: "#fff",
-                cursor: "pointer"
-              }}
-              title="Обновить список"
-            >
-              🔄
-            </button>
-          </div>  */}
-
           {isEditing && (
             <div style={{
               padding: "8px",

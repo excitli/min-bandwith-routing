@@ -24,7 +24,6 @@ export async function createOptimization(payload) {
 
 export async function saveOptimizationResult(payload) {
     const response = await api.post("/optimization/results", payload);
-    // const response = await api.post("/results", payload);
     return response.data;
 }
 
@@ -42,5 +41,10 @@ export async function getTopologyById(scenarioId) {
 
 export async function getAllTopologies() {
     const response = await api.get(`/topology/`);
+    return response.data;
+}
+
+export async function deleteAllDemands(scenarioId) {
+    const response = await api.delete(`/demands/${scenarioId}`);
     return response.data;
 }

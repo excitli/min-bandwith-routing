@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import ControlPanel from "./components/ControlPanel";
 import NetworkGraph from "./components/NetworkGraph";
 import ResultsPanel from "./components/ResultsPanel";
@@ -9,8 +9,8 @@ import {
   createOptimization,
   saveOptimizationResult,
   getOptimizationResults,
-  getAllTopologies,
-  getTopologyById
+  getTopologyById,
+  deleteAllDemands as deleteAllDemandsApi
 } from "./api/NetworkApi";
 
 function App() {
@@ -22,8 +22,6 @@ function App() {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [topologyIdInput, setTopologyIdInput] = useState("");
-
-  const [savedTopologies, setSavedTopologies] = useState([]);
   const [selectedScenarioId, setSelectedScenarioId] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -136,7 +134,7 @@ function App() {
       return {
         edgeId: edge.id,
         load,
-        utilization: load / edge.capacity
+        utilization: edge.capacity ? load / edge.capacity : 0
       };
     });
 
@@ -200,16 +198,6 @@ function App() {
   }
 };
 
-  const fetchTopologies = async () => {
-    try {
-      const data = await getAllTopologies();
-      setSavedTopologies(data);
-    } catch (error) {
-      console.error("Ошибка загрузки топологий:", error);
-      setErrorMessage("Не удалось загрузить список топологий");
-    }
-  };
-
 const loadTopology = async (scenarioId) => {
     try {
         setLoading(true);
@@ -234,7 +222,6 @@ const loadTopology = async (scenarioId) => {
         setNodes(restoredNodes);
         setEdges(restoredEdges);
 
-        // ЗАГРУЖАЕМ РЕЗУЛЬТАТЫ ОПТИМИЗАЦИИ
         try {
             const optimizationData = await getOptimizationResults(scenarioId);
 
@@ -242,7 +229,6 @@ const loadTopology = async (scenarioId) => {
 
             if (optimizationData && optimizationData.length > 0) {
 
-                // берем последний результат
                 const latestResult =
                     optimizationData[optimizationData.length - 1];
                 if (typeof latestResult.paths === "string") {
@@ -273,7 +259,7 @@ const loadTopology = async (scenarioId) => {
                     return {
                         edgeId: edge.id,
                         load,
-                        utilization: load / edge.capacity
+                        utilization: edge.capacity ? load / edge.capacity : 0
                     };
                 });
 
@@ -294,7 +280,6 @@ const loadTopology = async (scenarioId) => {
             }
 
         } catch (optError) {
-            console.log("Нет результатов оптимизации для этой топологии");
             setResult(null);
         }
 
@@ -339,8 +324,30 @@ const loadTopology = async (scenarioId) => {
     setDemands((prev) => prev.filter((demand) => demand.id !==demandId));
   });
 
-  const deleteAllDemands = () => {
+  const deleteDemands = (() => {
     setDemands([]);
+  });
+
+  const handleDeleteAllDemands = async () => {
+    if (!selectedScenarioId || !isEditing) return;
+
+    try {
+      await deleteAllDemandsApi(selectedScenarioId);
+
+      // очищаем запросы
+      setDemands([]);
+
+      // очищаем результаты расчёта
+      setResult(null);
+
+      // сообщение пользователю
+      setGraphRow("Запросы успешно удалены");
+
+    } catch (e) {
+      console.warn("Failed to delete demands on backend:", e);
+
+      setGraphRow("Ошибка удаления запросов");
+    }
   };
 
   const handleAddNode = () => {
@@ -440,7 +447,6 @@ const loadTopology = async (scenarioId) => {
                 capacity: parsedCapacity
               }
             ];
-            console.log("New edges:", newEdges);
             return newEdges;
           });
 
@@ -499,7 +505,6 @@ const loadTopology = async (scenarioId) => {
           edgeCapacity={edgeCapacity}
           graphRow={graphRow}
           loading={loading}
-          savedTopologies={savedTopologies}
           selectedScenarioId={selectedScenarioId}
           isEditing={isEditing}
 
@@ -515,10 +520,7 @@ const loadTopology = async (scenarioId) => {
           onAddEdgeMode={handleAddEdgeMode}
           onAddDemand={handleAddDemand}
           onLoadTopology={loadTopology}
-          onFetchTopologies={fetchTopologies}
           onNewTopology={handleNewTopology}
-
-
         />
 
         <NetworkGraph
@@ -535,9 +537,10 @@ const loadTopology = async (scenarioId) => {
           demands={demands}
           topologyIdInput={topologyIdInput}
           deleteCurDemand={deleteCurDemand}
-          deleteAllDemands={deleteAllDemands}
+          deleteAllDemands={handleDeleteAllDemands}
           setTopologyIdInput={setTopologyIdInput}
           onLoadTopology={loadTopology}
+          deleteDemands={deleteDemands}
         />
       </div>
     </div>

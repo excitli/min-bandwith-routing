@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import CytoscapeComponent from "react-cytoscapejs";
 
 function getEdgeColor(utilization = 0) {
@@ -98,30 +98,15 @@ export default function NetworkGraph({
 
   return (
     <div
-      style={{
-        width: "100%",
-        height: "619px",
-        border: "1px solid #d1d5db",
+        style={{
+          width: "100%",
+          height: "619px",
+          border: "1px solid #d1d5db",
         borderRadius: "12px",
         overflow: "hidden",
         background: "#fff"
       }}
     >
-      {/* <CytoscapeComponent
-        elements={elements}
-        stylesheet={stylesheet}
-        layout={{ name: "preset", fit: true, padding: 30 }}
-        style={{ width: "100%", height: "100%" }}
-        cy={(cy) => {
-          cy.off("tap", "node");
-          cy.on("tap", "node", (event) => {
-            const nodeId = event.target.id();
-            if (onNodeClick) {
-              onNodeClick(nodeId);
-            }
-          });
-        }}
-      /> */}
       <CytoscapeComponent
           elements={elements}
           stylesheet={stylesheet}
@@ -132,7 +117,7 @@ export default function NetworkGraph({
               componentSpacing: 100,
               nodeRepulsion: 400000
           }}
-          style={{ width: "100%", height: "100%" }}
+          style={{ maxWidth: "780px", width: "100%", height: "100%" }}
           cy={(cy) => {
               cy.off("tap", "node");
               cy.on("tap", "node", (event) => {

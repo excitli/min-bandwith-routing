@@ -1,4 +1,3 @@
-import React from "react";
 import delIcon from "../assets/delIconBlack.png";
 
 export default function ResultsPanel({
@@ -8,7 +7,8 @@ export default function ResultsPanel({
   deleteAllDemands,
   topologyIdInput,
   setTopologyIdInput,
-  onLoadTopology
+  onLoadTopology,
+  deleteDemands
 }) {
   return (
     <div
@@ -74,9 +74,23 @@ export default function ResultsPanel({
               ))}
             </ul>
 
-            {/* загрузка каналов */}
+            <button
+              onClick={deleteAllDemands}
+              style={{
+                  width: "100%",
+                  padding: "4px",
+                  borderRadius: "8px",
+                  background: "#f9f9f9",
+                  color: "#8e8e8e",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  border: "1px solid #d1d5db",
+              }}
+            >Очистить запросы</button>
           </>
         )}
+
+
       </div>
 
       <div
@@ -117,7 +131,7 @@ export default function ResultsPanel({
           </ul>
           <div style={{ display: "flex", justifyContent: "end" }}>
             <button
-              onClick={deleteAllDemands}
+              onClick={deleteDemands}
               style={{
               maxWidth: "91px",
               width: "100%",
@@ -159,24 +173,39 @@ export default function ResultsPanel({
             backgroundColor: "#fff",
           }}
         />
-
-        <button
-          onClick={() => onLoadTopology(Number(topologyIdInput))}
+        <div
           style={{
-              maxWidth: "91px",
-              width: "100%",
-              padding: "12px",
-              border: "none",
-              borderRadius: "8px",
-              background: "#538DE4",
-              color: "#fff",
-              cursor: "pointer",
-              fontSize: "14px",
-              marginTop: "10px"
-            }}
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-between"
+          }}
         >
-          Загрузить
-        </button>
+          <button
+            onClick={() => onLoadTopology(Number(topologyIdInput))}
+            style={{
+                maxWidth: "91px",
+                width: "100%",
+                padding: "12px",
+                border: "none",
+                borderRadius: "8px",
+                background: "#538DE4",
+                color: "#fff",
+                cursor: "pointer",
+                fontSize: "14px",
+                marginTop: "10px"
+              }}
+          >
+            Загpузить
+          </button>
+          <h5
+            style={{
+              marginTop: "18px",
+              fontSize: "10px",
+              textAlign: "right",
+              color: "#b6b6b6"
+            }}
+          >При загрузке по ID будет загружен последний запрос</h5>
+        </div>
       </div>
     </div>
   );
