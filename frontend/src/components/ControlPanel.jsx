@@ -22,6 +22,7 @@ export default function ControlPanel({
   isEditing,
   onLoadTopology,
   onNewTopology,
+  onDeleteEdgeMode,
 }) {
   const [startNode, setStartNode] = useState("");
   const [endNode, setEndNode] = useState("");
@@ -250,6 +251,7 @@ export default function ControlPanel({
           </div>
         </div>
 
+        <div>
         <button
           onClick={onAddEdgeMode}
           style={{
@@ -265,6 +267,25 @@ export default function ControlPanel({
         >
           Добавить ребро
         </button>
+
+        <button
+          onClick={onDeleteEdgeMode}
+          style={{
+            width: "100%",
+            height: "35px",
+            border: "none",
+            borderRadius: "8px",
+            background: "#C55252",
+            color: "#fff",
+            cursor: "pointer",
+            fontSize: "14px",
+            marginTop: "10px"
+          }}
+        >
+          Удалить ребро
+        </button>
+        </div>
+
         <div
           style={{
             marginTop: "18px",

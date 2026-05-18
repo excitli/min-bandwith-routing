@@ -46,6 +46,7 @@ function App() {
   try {
     setLoading(true);
     setErrorMessage("");
+    setResult(null);
 
     if (edges.length === 0) {
       setErrorMessage("Добавьте хотя бы одно ребро");
@@ -151,7 +152,7 @@ function App() {
     setResult(normalizedResult);
 
 
-    setDemands([]);
+    // setDemands([]);
 
     console.log("Что отправляем в /optimization/results:", {
       scenario_id: scenarioIdToUse,
@@ -374,6 +375,28 @@ const loadTopology = async (scenarioId) => {
     setSelectedNodes([]);
   };
 
+  const handleEdgeClick = (edgeId) => {
+    if (graphMode !== "deleteEdge") return;
+
+    setEdges((prevEdges) =>
+      prevEdges.filter((edge) => edge.id !== edgeId)
+    );
+
+    setGraphRow(`⚠️ Ребро ${edgeId} удалено`);
+
+    setGraphMode("none");
+  };
+
+  const handleDeleteEdgeMode = () => {
+    setGraphMode((prev) =>
+      prev === "deleteEdge" ? "none" : "deleteEdge"
+    );
+
+    setGraphRow("⚠️ Нажмите ребро, которое хотите удалить");
+
+    setSelectedNodes([]);
+  };
+
   const handleAddEdgeMode = () => {
 
     const parsedWeight = Number(edgeWeight);
@@ -403,10 +426,15 @@ const loadTopology = async (scenarioId) => {
         )
       );
 
-      setNodes((prevNodes) => prevNodes.filter((node) => node.id !== nodeId));
+      setNodes((prevNodes) =>
+        prevNodes.filter((node) => node.id !== nodeId)
+      );
+
+      setGraphRow(`⚠️ Узел ${nodeId} удалён`);
 
       setGraphMode("none");
       setSelectedNodes([]);
+
       return;
     }
 
@@ -518,6 +546,7 @@ const loadTopology = async (scenarioId) => {
           onAddNode={handleAddNode}
           onDeleteNodeMode={handleDeleteNodeMode}
           onAddEdgeMode={handleAddEdgeMode}
+          onDeleteEdgeMode={handleDeleteEdgeMode}
           onAddDemand={handleAddDemand}
           onLoadTopology={loadTopology}
           onNewTopology={handleNewTopology}
@@ -528,6 +557,7 @@ const loadTopology = async (scenarioId) => {
           edges={edges}
           edgeLoads={result?.edgeLoads || []}
           onNodeClick={handleNodeClick}
+          onEdgeClick={handleEdgeClick}
           graphMode={graphMode}
           selectedNodes={selectedNodes}
         />

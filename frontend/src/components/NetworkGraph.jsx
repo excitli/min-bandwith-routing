@@ -14,7 +14,9 @@ export default function NetworkGraph({
   edges = [],
   edgeLoads = [],
   onNodeClick,
-  selectedNodes = []
+  onEdgeClick,
+  selectedNodes = [],
+  graphMode
 }) {
   const loadMap = useMemo(() => {
     const map = new Map();
@@ -45,7 +47,7 @@ export default function NetworkGraph({
           id: edge.id,
           source: edge.source,
           target: edge.target,
-          label:`${load}/${capacity} (${Math.round(utilization * 100)}%)`,
+          label: `w:${edge.weight} | ${load}/${capacity} (${Math.round(utilization * 100)}%)`,
           utilization,
           color: getEdgeColor(utilization)
         }
@@ -117,14 +119,25 @@ export default function NetworkGraph({
               componentSpacing: 100,
               nodeRepulsion: 400000
           }}
-          style={{ maxWidth: "780px", width: "100%", height: "100%" }}
+          style={{ width: "100%", height: "100%" }}
           cy={(cy) => {
               cy.off("tap", "node");
+              cy.off("tap", "edge");
+
               cy.on("tap", "node", (event) => {
-                  const nodeId = event.target.id();
-                  if (onNodeClick) {
-                      onNodeClick(nodeId);
-                  }
+                const nodeId = event.target.id();
+
+                if (onNodeClick) {
+                  onNodeClick(nodeId);
+                }
+              });
+
+              cy.on("tap", "edge", (event) => {
+                const edgeId = event.target.id();
+
+                if (onEdgeClick) {
+                  onEdgeClick(edgeId);
+                }
               });
           }}
       />
