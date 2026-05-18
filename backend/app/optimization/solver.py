@@ -2,6 +2,7 @@ import pyomo.environ as pyo
 from typing import Any, List, Dict
 from collections import defaultdict
 from backend.app.schemas.optimize import RoutingType, OptimizationObjective
+from backend.app.optimization.shortest_paths import generate_shortest_paths_by_weights
 
 
 def solve_routing(
@@ -67,14 +68,16 @@ def solve_routing(
         else:
             return current_flow <= edges_throughput[e_id]
 
-
     if objective_type == OptimizationObjective.MIN_BANDWITH:
         def obj_min(m):
             if routing_type == RoutingType.NON_BIFURCATED:
-                return sum(m.y[p_id] * demand_traffic[path_data[p_id]['demand_id']] * path_data[p_id]['length']
+                return sum(m.y[p_id] * demand_traffic[path_data[p_id]['demand_id']] * path_data[p_id].get('weight',path_data[p_id].get('length',1.0))
                            for p_id in m.PATHS)
             else:
-                return sum(m.x[p_id] * path_data[p_id]['length'] for p_id in m.PATHS)
+                return sum(
+                    m.x[p_id] * path_data[p_id].get('weight', path_data[p_id].get('length', 1.0)) for p_id in m.PATHS
+                )
+
         model.obj = pyo.Objective(rule=obj_min, sense=pyo.minimize)
 
     elif objective_type == OptimizationObjective.MAX_FREE_CAP:
@@ -84,6 +87,8 @@ def solve_routing(
         model.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
 
     solver = pyo.SolverFactory('glpk')
+    #if not solver.avaiable():
+    #    throw KeyError
     results = solver.solve(model)
 
     output_paths = []
@@ -114,3 +119,61 @@ def solve_routing(
         "paths": output_paths,
         "duals": duals,
     }
+
+
+
+#candicate path list augmenation
+def cpla(
+    graph: Any,
+    edges: List[Any],
+    demands: List[Any],
+    initial_paths: List[Dict[str, Any]],
+    routing_type: RoutingType,
+    objective_type: OptimizationObjective,
+    max_iterations: int = 10):
+    current_paths = list(initial_paths)
+
+    existing_path_signatures = {(p['demand_id'], tuple(p['nodes'])) for p in current_paths}
+
+
+    if routing_type != RoutingType.BIFURCATED:
+        return solve_routing(edges, demands, current_paths, routing_type, objective_type)
+
+    for iteration in range(max_iterations):
+        # Решаем задачу с текущим набором путей (Restricted Master Problem)
+        result = solve_routing(edges, demands, current_paths, routing_type, objective_type)
+
+        duals = result.get("duals", {})
+        if not duals or not duals.get("edges"):
+            break
+
+
+        edge_weights = {}
+        for e in edges:
+            pi_e = abs(duals["edges"].get(e.id, 0.0))
+
+            if objective_type == OptimizationObjective.MIN_BANDWITH:
+                # В случае минимизации пропускной способности, вес = физический_вес + штраф_за_емкость
+                edge_weights[e.id] = getattr(e, 'weight', 1.0) + pi_e
+            else:  # MAX_FREE_CAP
+
+                edge_weights[e.id] = pi_e + 1e-4
+
+
+        new_paths = generate_shortest_paths_by_weights(graph, demands, edge_weights)
+
+
+        added_any = False
+        for p in new_paths:
+            signature = (p['demand_id'], tuple(p['nodes']))
+            if signature not in existing_path_signatures:
+                existing_path_signatures.add(signature)
+                p['id'] = f"{p['demand_id']}-cpla-{iteration}"
+                current_paths.append(p)
+                added_any = True
+
+        if not added_any:
+            break
+
+
+    return solve_routing(edges, demands, current_paths, routing_type, objective_type)
