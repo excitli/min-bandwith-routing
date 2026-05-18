@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from backend.app.core.dependencies import get_db
-from backend.app.optimization.solver import solve_routing
+from backend.app.optimization.solver import solve_routing, cpla
 from backend.app.schemas.optimize import OptimizeRequest, OptimizeResult
 from backend.app.optimization.shortest_paths import generate_k_shortest_paths
 from backend.app.api.routes.topology import get_graph_by_scenario
@@ -10,6 +10,7 @@ from backend.app.api.routes.demands import get_demands_by_scenario
 from backend.app.models.optimizationResults import OptimizationResults
 import json
 from typing import List
+from asyncio import to_thread
 
 
 router = APIRouter()
@@ -24,15 +25,18 @@ async def optimize(
     graph = topology_data["graph"]
     demands = await get_demands_by_scenario(data.scenario_id, db)
 
-    paths = generate_k_shortest_paths(graph, k_paths = data.k_paths, demands=demands)
+    #paths = generate_k_shortest_paths(graph, k_paths = data.k_paths, demands=demands)
+    paths = await to_thread(generate_k_shortest_paths, graph, k_paths=data.k_paths, demands=demands)
+
     try:
-        results = solve_routing(
+        results = await to_thread(
+            solve_routing,
             edges=topology_data["edges"],
             demands=demands,
             paths=paths,
             routing_type=data.routing_type,
             objective_type=data.optimization_objective,
-        )
+                                  )
     except ValueError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Optimization is impossible for such demands.")
     return {
