@@ -3,6 +3,14 @@ import ControlPanel from "./components/ControlPanel";
 import NetworkGraph from "./components/NetworkGraph";
 import ResultsPanel from "./components/ResultsPanel";
 import { mockNetwork } from "./data/MockData";
+
+function circularPosition(index, total, cx = 400, cy = 300, radius = 220) {
+  const angle = (2 * Math.PI * index) / total - Math.PI / 2;
+  return {
+    x: cx + radius * Math.cos(angle),
+    y: cy + radius * Math.sin(angle)
+  };
+}
 import {
   createTopology,
   createDemands,
@@ -26,12 +34,9 @@ function App() {
   const [isEditing, setIsEditing] = useState(false);
 
   const [nodes, setNodes] = useState(
-    mockNetwork.nodes.map((node, index) => ({
+    mockNetwork.nodes.map((node, index, arr) => ({
       ...node,
-      position: {
-        x: 180 + index * 120,
-        y: index % 2 === 0 ? 220 : 320
-      }
+      position: circularPosition(index, arr.length)
     }))
   );
 
@@ -207,13 +212,10 @@ const loadTopology = async (scenarioId) => {
         const data = await getTopologyById(scenarioId);
         console.log("TOPOLOGY DATA:", data);
 
-        const restoredNodes = data.nodes.map((nodeId, index) => ({
+        const restoredNodes = data.nodes.map((nodeId, index, arr) => ({
             id: String(nodeId),
             label: String(nodeId),
-            position: {
-                x: 180 + index * 120,
-                y: index % 2 === 0 ? 220 : 320
-            }
+            position: circularPosition(index, arr.length)
         }));
 
         const restoredEdges = data.edges.map((edge) => ({
@@ -304,12 +306,9 @@ const loadTopology = async (scenarioId) => {
 };
 
   const handleNewTopology = () => {
-    setNodes(mockNetwork.nodes.map((node, index) => ({
+    setNodes(mockNetwork.nodes.map((node, index, arr) => ({
       ...node,
-      position: {
-        x: 180 + index * 120,
-        y: index % 2 === 0 ? 220 : 320
-      }
+      position: circularPosition(index, arr.length)
     })));
     setEdges(mockNetwork.edges);
     setDemands([]);
@@ -362,13 +361,16 @@ const loadTopology = async (scenarioId) => {
     const newNode = {
       id: newNodeId,
       label: String(nextNodeNumber),
-      position: {
-        x: 150 + Math.random() * 400,
-        y: 120 + Math.random() * 300
-      }
+      position: { x: 400, y: 300 }
     };
 
-    setNodes((prev) => [...prev, newNode]);
+    setNodes((prev) => {
+      const updated = [...prev, newNode];
+      return updated.map((n, i, arr) => ({
+        ...n,
+        position: circularPosition(i, arr.length)
+      }));
+    });
     setNodeCounter((prev) => prev + 1);
     setGraphRow(`⚠️  Узел ${nextNodeNumber} добавлен`);
   };
