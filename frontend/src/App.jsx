@@ -17,8 +17,7 @@ import {
   createOptimization,
   saveOptimizationResult,
   getOptimizationResults,
-  getTopologyById,
-  deleteAllDemands as deleteAllDemandsApi
+  getTopologyById
 } from "./api/NetworkApi";
 
 function App() {
@@ -328,30 +327,8 @@ const loadTopology = async (scenarioId) => {
     setDemands((prev) => prev.filter((demand) => demand.id !==demandId));
   });
 
-  const deleteDemands = (() => {
+  const handleDeleteAllDemands = () => {
     setDemands([]);
-  });
-
-  const handleDeleteAllDemands = async () => {
-    if (!selectedScenarioId || !isEditing) return;
-
-    try {
-      await deleteAllDemandsApi(selectedScenarioId);
-
-      // очищаем запросы
-      setDemands([]);
-
-      // очищаем результаты расчёта
-      setResult(null);
-
-      // сообщение пользователю
-      setGraphRow("Запросы успешно удалены");
-
-    } catch (e) {
-      console.warn("Failed to delete demands on backend:", e);
-
-      setGraphRow("Ошибка удаления запросов");
-    }
   };
 
   const handleAddNode = () => {
@@ -576,7 +553,6 @@ const loadTopology = async (scenarioId) => {
           deleteAllDemands={handleDeleteAllDemands}
           setTopologyIdInput={setTopologyIdInput}
           onLoadTopology={loadTopology}
-          deleteDemands={deleteDemands}
         />
       </div>
     </div>

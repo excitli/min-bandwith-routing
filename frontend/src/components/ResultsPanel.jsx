@@ -7,8 +7,7 @@ export default function ResultsPanel({
   deleteAllDemands,
   topologyIdInput,
   setTopologyIdInput,
-  onLoadTopology,
-  deleteDemands
+  onLoadTopology
 }) {
   return (
     <div
@@ -73,21 +72,6 @@ export default function ResultsPanel({
                 </li>
               ))}
             </ul>
-
-            <button
-              onClick={deleteAllDemands}
-              style={{
-                width: "100%",
-                height: "35px",
-                border: "none",
-                borderRadius: "8px",
-                background: "#C55252",
-                color: "#fff",
-                cursor: "pointer",
-                fontSize: "14px",
-                marginTop: "10px"
-              }}
-            >Очистить запросы</button>
           </>
         )}
 
@@ -132,15 +116,15 @@ export default function ResultsPanel({
           </ul>
           <div style={{ display: "flex", justifyContent: "end" }}>
             <button
-              onClick={deleteDemands}
+              onClick={deleteAllDemands}
               style={{
-              maxWidth: "91px",
+              maxWidth: "140px",
               width: "100%",
               padding: "12px",
               border: "none",
               borderRadius: "8px",
-              background: "#E5E5E5",
-              color: "#000",
+              background: "#C55252",
+              color: "#fff",
               cursor: "pointer",
               fontSize: "14px"
             }}
