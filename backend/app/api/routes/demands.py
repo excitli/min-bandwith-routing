@@ -28,6 +28,8 @@ async def create_demand(data: DemandCreate, db: AsyncSession = Depends(get_db)):
     if not scenario:
         raise HTTPException(status_code=404, detail="Scenario not found, add a topology first")
 
+    await db.execute(delete(Demand).where(Demand.scenario_id == data.scenario_id))
+
     for d in data.demands:
         demand = Demand(
             scenario_id=data.scenario_id,
