@@ -1,8 +1,9 @@
 export const mockNetwork = {
     nodes : [
-        {id: '1', label: '1'},
-        {id: '2', label: '2'},
-        {id: '3', label: '3'},
+        // {id: '1', label: '1'},
+        // {id: '2', label: '2'},
+        // {id: '3', label: '3'},
+
         // {id: '4', label: '4'},
         // {id: '5', label: '5'},
         // {id: '6', label: '6'},
@@ -19,9 +20,10 @@ export const mockNetwork = {
         // {id: '17', label: '17'}
     ],
     edges : [
-        {id:'1-2', source: '1', target: '2', weight: 1, capacity: 10},
-        {id:'1-3', source: '1', target: '3', weight: 3, capacity: 10},
-        {id:'2-3', source: '2', target: '3', weight: 1, capacity: 10},
+        // {id:'1-2', source: '1', target: '2', weight: 1, capacity: 10},
+        // {id:'1-3', source: '1', target: '3', weight: 3, capacity: 10},
+        // {id:'2-3', source: '2', target: '3', weight: 1, capacity: 10},
+        
         // {id:'2-4', source: '2', target: '4', weight: 2, capacity: 10},
         // {id:'2-5', source: '2', target: '5', weight: 2, capacity: 10},
         // {id:'3-4', source: '3', target: '4', weight: 1, capacity: 10},

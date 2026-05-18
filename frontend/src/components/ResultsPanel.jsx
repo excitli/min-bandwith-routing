@@ -77,14 +77,15 @@ export default function ResultsPanel({
             <button
               onClick={deleteAllDemands}
               style={{
-                  width: "100%",
-                  padding: "4px",
-                  borderRadius: "8px",
-                  background: "#f9f9f9",
-                  color: "#8e8e8e",
-                  cursor: "pointer",
-                  fontSize: "14px",
-                  border: "1px solid #d1d5db",
+                width: "100%",
+                height: "35px",
+                border: "none",
+                borderRadius: "8px",
+                background: "#C55252",
+                color: "#fff",
+                cursor: "pointer",
+                fontSize: "14px",
+                marginTop: "10px"
               }}
             >Очистить запросы</button>
           </>
