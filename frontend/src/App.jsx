@@ -327,6 +327,12 @@ const loadTopology = async (scenarioId) => {
     setDemands((prev) => prev.filter((demand) => demand.id !==demandId));
   });
 
+  const editDemand = ((demandId, updatedFields) => {
+    setDemands((prev) =>
+      prev.map((d) => d.id === demandId ? { ...d, ...updatedFields } : d)
+    );
+  });
+
   const handleDeleteAllDemands = () => {
     setDemands([]);
   };
@@ -550,6 +556,7 @@ const loadTopology = async (scenarioId) => {
           demands={demands}
           topologyIdInput={topologyIdInput}
           deleteCurDemand={deleteCurDemand}
+          editDemand={editDemand}
           deleteAllDemands={handleDeleteAllDemands}
           setTopologyIdInput={setTopologyIdInput}
           onLoadTopology={loadTopology}
