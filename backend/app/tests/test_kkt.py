@@ -20,8 +20,8 @@ def mock_topology_data():
     edges = [MockEdge(1, 100.0), MockEdge(2, 100.0), MockEdge(3, 50.0)]
     demands = [MockDemand(1, 40.0)]
     paths = [
-        {"id": "p1", "demand_id": 1, "edge_ids": [1, 2], "length": 2, "nodes": [1, 2, 3]},
-        {"id": "p2", "demand_id": 1, "edge_ids": [3], "length": 1, "nodes": [1, 3]}
+        {"id": "p1", "demand_id": 1, "edge_ids": [1, 2], "length": 2, "nodes": [1, 2, 3], "weight": 2.0},
+        {"id": "p2", "demand_id": 1, "edge_ids": [3], "length": 1, "nodes": [1, 3], "weight": 1.0}
     ]
     return edges, demands, paths
 
@@ -42,7 +42,7 @@ def test_kkt_conditions_bifurcated(mock_topology_data):
     assert sum(active_flows.values()) == pytest.approx(40.0)
 
     for p in paths:
-        base_cost = p["length"]
+        base_cost = p.get("weight", p["length"])
         congestion_tax = sum(abs(duals["edges"].get(e, 0.0)) for e in p["edge_ids"])
 
 
