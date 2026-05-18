@@ -207,9 +207,13 @@ const loadTopology = async (scenarioId) => {
         const data = await getTopologyById(scenarioId);
         console.log("TOPOLOGY DATA:", data);
 
-        const restoredNodes = data.nodes.map((nodeId) => ({
+        const restoredNodes = data.nodes.map((nodeId, index) => ({
             id: String(nodeId),
-            label: String(nodeId)
+            label: String(nodeId),
+            position: {
+                x: 180 + index * 120,
+                y: index % 2 === 0 ? 220 : 320
+            }
         }));
 
         const restoredEdges = data.edges.map((edge) => ({
